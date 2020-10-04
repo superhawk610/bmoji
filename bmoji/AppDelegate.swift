@@ -81,12 +81,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     
     // MARK: - click handlers
     
-    func handleEmojiSelect(_ glyph: String) {
+    func handleEmojiSelect(_ emoji: Emoji) {
         // close the popup and give focus back to the previously active app (the app we want to paste to)
         self.hidePopup()
         
         // paste glyph after a reasonable delay (to allow the previous app to regain focus)
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) { Paste.withString(glyph) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) { Paste.withString(emoji.glyph) }
         
         // TODO: record most frequently used emojis
     }
