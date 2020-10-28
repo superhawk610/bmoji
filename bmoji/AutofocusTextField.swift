@@ -43,7 +43,7 @@ struct AutofocusTextField: NSViewRepresentable {
         Coordinator { self.text = $0 }
     }
 
-    final class Coordinator: NSObject, NSTextFieldDelegate {
+    final class Coordinator: NSObject, NSTextFieldDelegate, NSControlTextEditingDelegate {
         var hasBecomeFirstResponder: Bool = false
         var setter: (String) -> Void
 
@@ -55,6 +55,39 @@ struct AutofocusTextField: NSViewRepresentable {
             if let textField = obj.object as? NSTextField {
                 setter(textField.stringValue)
             }
+        }
+        
+        // OK, so this text field does a bit more than just autofocus; it also passes keypresses
+        // we care about for navigation through to the shared KeypressSubject, which can then
+        // be subscribed to by the UI
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSStandardKeyBindingResponding.moveUp(_:)) {
+                Keypresses.subject.send(.up)
+                return true
+            } else if commandSelector == #selector(NSStandardKeyBindingResponding.moveDown(_:)) {
+                Keypresses.subject.send(.down)
+                return true
+            } else if commandSelector == #selector(NSStandardKeyBindingResponding.moveLeft(_:)) {
+                Keypresses.subject.send(.left)
+                return true
+            } else if commandSelector == #selector(NSStandardKeyBindingResponding.moveRight(_:)) {
+                Keypresses.subject.send(.right)
+                return true
+            } else if commandSelector == #selector(NSStandardKeyBindingResponding.insertTab(_:)) {
+                Keypresses.subject.send(.tab)
+                return true
+            } else if commandSelector == #selector(NSStandardKeyBindingResponding.insertBacktab(_:)) {
+                Keypresses.subject.send(.shiftTab)
+                return true
+            } else if commandSelector == #selector(NSStandardKeyBindingResponding.insertNewline(_:)) {
+                Keypresses.subject.send(.enter)
+                return true
+            } else if commandSelector == #selector(NSStandardKeyBindingResponding.cancelOperation(_:)) {
+                Keypresses.subject.send(.esc)
+                return true
+            }
+            
+            return false
         }
 
     }
