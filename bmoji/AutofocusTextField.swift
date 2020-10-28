@@ -79,8 +79,11 @@ struct AutofocusTextField: NSViewRepresentable {
             } else if commandSelector == #selector(NSStandardKeyBindingResponding.insertBacktab(_:)) {
                 Keypresses.subject.send(.shiftTab)
                 return true
-            } else if commandSelector == #selector(NSStandardKeyBindingResponding.complete(_:)) {
+            } else if commandSelector == #selector(NSStandardKeyBindingResponding.insertNewline(_:)) {
                 Keypresses.subject.send(.enter)
+                return true
+            } else if commandSelector == #selector(NSStandardKeyBindingResponding.cancelOperation(_:)) {
+                Keypresses.subject.send(.esc)
                 return true
             }
             

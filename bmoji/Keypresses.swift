@@ -16,6 +16,7 @@ enum Key {
     case tab
     case shiftTab
     case enter
+    case esc
 }
 
 typealias KeypressSubject = PassthroughSubject<Key, Never>

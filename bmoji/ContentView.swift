@@ -11,9 +11,7 @@ import Combine
 struct ContentView: View {
     
     @ObservedObject private var viewModel: ViewModel = ViewModel()
-    
-    var onClick: EmojiRowClickHandler? = nil
-    
+        
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             AutofocusTextField("Search...", text: self.$viewModel.query)
@@ -42,6 +40,10 @@ struct ContentView: View {
     
     func onHover(_ rowIdx: Int, _ colIdx: Int) {
         self.viewModel.activeIdx = rowIdx * ViewModel.emojisPerRow + colIdx
+    }
+    
+    func onClick(_ emoji: Emoji) {
+        Actions.subject.send(.paste(emoji))
     }
     
 }
@@ -94,13 +96,10 @@ class ViewModel: ObservableObject {
     var activeIdx: Int {
         get { self._activeIdx }
         set {
-            // TODO: when jumping to the top left (by attempting to navigate out of bounds),
-            // the next keypress doesn't navigate to the expected emoji
-            
             if newValue < 0 {
                 self.activeRowIdx = 0
                 self.activeColIdx = 0
-                self._activeIdx = -1
+                self._activeIdx = 0
                 self.active = nil
             } else if newValue >= self.cellCount {
                 self.activeIdx = self.cellCount - 1
@@ -117,6 +116,8 @@ class ViewModel: ObservableObject {
         }
     }
     
+    // MARK: - keypress handling
+    
     func handleKey(_ key: Key) {
         switch key {
         case .up: return self.selectUp()
@@ -125,9 +126,18 @@ class ViewModel: ObservableObject {
         case .right: return self.selectRight()
         case .tab: return self.selectNext()
         case .shiftTab: return self.selectPrev()
-        case .enter:
-            // TODO: trigger onClick in content view
-            print("enter callback not implemented")
+        case .esc: return self.handleEsc()
+        case .enter: return self.handleReturn()
+        }
+    }
+    
+    func handleEsc() {
+        Actions.subject.send(.close)
+    }
+    
+    func handleReturn() {
+        if self.active != nil {
+            Actions.subject.send(.paste(self.active!))
         }
     }
     
