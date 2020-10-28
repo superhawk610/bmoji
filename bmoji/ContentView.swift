@@ -86,6 +86,14 @@ class ViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] key in self?.handleKey(key) }
             .store(in: &self.cancellables)
+        
+        Actions.subject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] action in
+                self?.query = ""
+                self?.activeIdx = -1
+            }
+            .store(in: &self.cancellables)
     }
     
     // MARK: - row/col navigation
@@ -138,6 +146,11 @@ class ViewModel: ObservableObject {
     func handleReturn() {
         if self.active != nil {
             Actions.subject.send(.paste(self.active!))
+        } else {
+            let firstVisible = self.rows[safe: 0]?.1[safe: 0]
+            if firstVisible != nil {
+                Actions.subject.send(.paste(firstVisible!))
+            }
         }
     }
     
