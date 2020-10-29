@@ -48,7 +48,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Add a global key combo listener
         let hotKey = HotKey(key: .space, modifiers: [.command, .option])
-        hotKey.keyDownHandler = { self.showPopup() }
+        hotKey.keyDownHandler = { self.togglePopup() }
         self.hotKey = hotKey
         
         // Add an actions listener
@@ -56,9 +56,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] action in self?.handleAction(action) }
             .store(in: &self.cancellables)
-        
-        // TODO: close window when ESC key is pressed
-        // TODO: improve popup show/hide
+    }
+    
+    func applicationWillResignActive(_ notification: Notification) {
+        self.hidePopup()
     }
     
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -71,7 +72,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if NSApp.currentEvent!.type == .rightMouseUp {
             self.statusBarItem.menu = self.menu
             self.statusBarItem.button?.performClick(nil)
-        } else if self.popup.isShown {
+        } else {
+            self.togglePopup()
+        }
+    }
+    
+    func togglePopup() {
+        if self.popup.isShown {
             self.hidePopup()
         } else {
             self.showPopup()

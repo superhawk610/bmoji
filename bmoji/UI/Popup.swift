@@ -26,9 +26,10 @@ class Popup<Content>: NSWindow where Content: View {
         self.contentSize = contentSize
         self.isOpaque = false
         self.backgroundColor = .clear
-        self.hidesOnDeactivate = true
+        self.hidesOnDeactivate = false
         self.isReleasedWhenClosed = false
         self.isMovableByWindowBackground = true
+        self.collectionBehavior = .canJoinAllSpaces
         self.contentViewController = NSHostingController(rootView: rootView)
     }
     
@@ -37,20 +38,24 @@ class Popup<Content>: NSWindow where Content: View {
         self.setFrameOrigin(point)
         
         self.makeKeyAndOrderFront(nil)
-        self.orderFrontRegardless()
-        if self.canBecomeMain { self.becomeMain() }
-        
-        NSApp.unhide(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
     
     func showAtCursor() {
-        self.showAt(NSPoint(x: NSEvent.mouseLocation.x + 5, y: NSEvent.mouseLocation.y + 5))
+        let cursor = NSEvent.mouseLocation
+        guard let activeScreen = NSScreen.containingCursor() else {
+            self.showAt(NSPoint(x: cursor.x + 5, y: cursor.y + 5))
+            return
+        }
+        
+        if cursor.x + self.contentSize.width > activeScreen.frame.width {
+            self.showAt(NSPoint(x: activeScreen.frame.width - self.contentSize.width - 5, y: cursor.y + 5))
+        } else {
+            self.showAt(NSPoint(x: cursor.x + 5, y: cursor.y + 5))
+        }
     }
     
     func hide() {
         self.orderOut(nil)
-
-        NSApp.hide(nil)
     }
 }

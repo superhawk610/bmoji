@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Cocoa
 
 extension Array {
     func chunked(into size: Int) -> [[Element]] {
@@ -18,5 +19,15 @@ extension Array {
 extension Collection {
     subscript (safe index: Index) -> Element? {
         return indices.contains(index) ? self[index] : nil
+    }
+}
+
+extension NSScreen {
+    /** Get the screen containing the mouse cursor (if any). */
+    static func containingCursor() -> NSScreen? {
+        let mouseLocation = NSEvent.mouseLocation
+        let screens = NSScreen.screens
+        
+        return screens.first { NSMouseInRect(mouseLocation, $0.frame, false) }
     }
 }
