@@ -61,6 +61,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // TODO: improve popup show/hide
     }
     
+    func applicationWillTerminate(_ aNotification: Notification) {
+        Storage.shared.persist()
+    }
+    
     // MARK: - show/hide popup
     
     @objc func handleStatusItemClick(sender: NSStatusItem) {

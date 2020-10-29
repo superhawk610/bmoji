@@ -16,6 +16,7 @@ struct Emoji: Identifiable, Equatable {
     var glyph: String
     var category: String
     var keywords: [String]
+    var rank: Int?
     
     // whether or not the emoji supports the Fitzpatrick scale (skin tones)
     // TODO: enable Fitzpatrick tone selection
@@ -26,6 +27,9 @@ struct Emoji: Identifiable, Equatable {
         self.glyph = json["glyph"].stringValue
         self.category = json["category"].stringValue
         self.keywords = json["keywords"].arrayValue.map { $0.stringValue }
+        
+        // TODO: there's got to be a cleaner way to express this
+        self.rank = (Storage.shared.get("ranks") as! Optional<Dictionary<String, Int>>)?[self.id]
     }
 }
 
