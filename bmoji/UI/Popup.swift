@@ -38,6 +38,7 @@ class Popup<Content>: NSWindow where Content: View {
         self.setFrameOrigin(point)
         
         self.makeKeyAndOrderFront(nil)
+        NSApp.unhide(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
     
@@ -57,5 +58,7 @@ class Popup<Content>: NSWindow where Content: View {
     
     func hide() {
         self.orderOut(nil)
+        
+        NSApp.hide(nil)
     }
 }
