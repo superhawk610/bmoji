@@ -58,7 +58,25 @@ class Storage {
     }
     
     private func load() {
-        // TODO: attempt to read from stored JSON
+        guard let storageFile = self.storageFile else {
+            print("persistence disabled")
+            return
+        }
+        
+        do {
+            let data = try Data(contentsOf: storageFile, options: [])
+            guard let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String : Any] else { return }
+            self.data = json
+        } catch let error as NSError {
+            if error.domain == NSCocoaErrorDomain && error.code == 260 {
+                // file doesn't exist, which should be safe to ignore on first runs
+            } else {
+                // TODO: improve error handling
+                print(error)
+            }
+        } catch {
+            print(error)
+        }
     }
     
 }
