@@ -11,33 +11,6 @@ import Combine
 struct ContentView: View {
     
     @ObservedObject private var viewModel: ViewModel = ViewModel()
-    
-    private let scrollingProxy = ListScrollingProxy()
-    private var cancellables = Set<AnyCancellable>()
-    
-    init() {
-        weak var viewModel = self.viewModel
-        weak var scrollingProxy = self.scrollingProxy
-        
-        self.viewModel.$active
-            .receive(on: DispatchQueue.main)
-            .sink { _ in
-                if let activeRowIdx = viewModel?.activeRowIdx, let currentScrollY = scrollingProxy?.currentScrollY {
-                    let rowHeight = 46
-                    let numVisibleRows = 4
-                    
-                    let topRowIdx = Int(currentScrollY / CGFloat(rowHeight))
-                    let bottomRowIdx = topRowIdx + numVisibleRows - 1
-                    
-                    if activeRowIdx < topRowIdx {
-                        scrollingProxy?.scrollTo(CGFloat(activeRowIdx * rowHeight))
-                    } else if activeRowIdx > bottomRowIdx {
-                        scrollingProxy?.scrollTo(CGFloat((activeRowIdx - numVisibleRows + 1) * rowHeight))
-                    }
-                }
-            }
-            .store(in: &self.cancellables)
-    }
         
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -52,7 +25,7 @@ struct ContentView: View {
                     onClick: self.onClick
                 )
                 .background(
-                    ListScrollingHelper(proxy: self.scrollingProxy)
+                    ListScrollingHelper(proxy: self.viewModel.scrollingProxy)
                 )
             }
             if self.viewModel.active != nil {
@@ -79,6 +52,10 @@ typealias IndexedRow = (Int, [Emoji])
 class ViewModel: ObservableObject {
     
     static let emojisPerRow = 9
+    static let rowHeight = 46
+    static let visibleRows = 4
+    
+    let scrollingProxy = ListScrollingProxy()
     
     private var cellCount: Int = 0
     @Published private(set) var rows: [IndexedRow] = []
@@ -130,12 +107,15 @@ class ViewModel: ObservableObject {
     var activeIdx: Int {
         get { self._activeIdx }
         set {
+            var handled = true
+            
             if newValue < 0 {
                 self.activeRowIdx = 0
                 self.activeColIdx = 0
                 self._activeIdx = 0
                 self.active = nil
             } else if newValue >= self.cellCount {
+                handled = false
                 self.activeIdx = self.cellCount - 1
             } else {
                 let rowIdx = newValue / ViewModel.emojisPerRow
@@ -146,6 +126,17 @@ class ViewModel: ObservableObject {
                 self.activeColIdx = colIdx
                 self._activeIdx = newValue
                 self.active = row[colIdx]
+            }
+
+            if handled, let currentScrollY = self.scrollingProxy.currentScrollY, self.active != nil {
+                let topRowIdx = Int(currentScrollY / CGFloat(ViewModel.rowHeight))
+                let bottomRowIdx = topRowIdx + ViewModel.visibleRows - 1
+                
+                if activeRowIdx < topRowIdx {
+                    self.scrollingProxy.scrollTo(CGFloat(activeRowIdx * ViewModel.rowHeight))
+                } else if activeRowIdx > bottomRowIdx {
+                    self.scrollingProxy.scrollTo(CGFloat((activeRowIdx - ViewModel.visibleRows + 1) * ViewModel.rowHeight))
+                }
             }
         }
     }
