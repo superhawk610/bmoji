@@ -29,7 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let contentView = ContentView()
         
         // Create the popup
-        self.popup = Popup(contentSize: NSSize(width: 405, height: 250), rootView: contentView)
+        self.popup = Popup(contentSize: NSSize(width: 405, height: 260), rootView: contentView)
         
         // Create the context menu
         let menu = NSMenu()

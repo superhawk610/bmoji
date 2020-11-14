@@ -11,6 +11,33 @@ import Combine
 struct ContentView: View {
     
     @ObservedObject private var viewModel: ViewModel = ViewModel()
+    
+    private let scrollingProxy = ListScrollingProxy()
+    private var cancellables = Set<AnyCancellable>()
+    
+    init() {
+        weak var viewModel = self.viewModel
+        weak var scrollingProxy = self.scrollingProxy
+        
+        self.viewModel.$active
+            .receive(on: DispatchQueue.main)
+            .sink { _ in
+                if let activeRowIdx = viewModel?.activeRowIdx, let currentScrollY = scrollingProxy?.currentScrollY {
+                    let rowHeight = 46
+                    let numVisibleRows = 4
+                    
+                    let topRowIdx = Int(currentScrollY / CGFloat(rowHeight))
+                    let bottomRowIdx = topRowIdx + numVisibleRows - 1
+                    
+                    if activeRowIdx < topRowIdx {
+                        scrollingProxy?.scrollTo(CGFloat(activeRowIdx * rowHeight))
+                    } else if activeRowIdx > bottomRowIdx {
+                        scrollingProxy?.scrollTo(CGFloat((activeRowIdx - numVisibleRows + 1) * rowHeight))
+                    }
+                }
+            }
+            .store(in: &self.cancellables)
+    }
         
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -24,14 +51,13 @@ struct ContentView: View {
                     onHover: self.onHover,
                     onClick: self.onClick
                 )
+                .background(
+                    ListScrollingHelper(proxy: self.scrollingProxy)
+                )
             }
             if self.viewModel.active != nil {
-                VStack(alignment: .leading) {
-                    Text(self.viewModel.active!.glyph)
-                        .padding([.horizontal, .top], 10)
-                    Text(([self.viewModel.active!.id] + self.viewModel.active!.keywords).joined(separator: ", "))
-                        .padding(.all, 10)
-                }
+                Text(([self.viewModel.active!.id] + self.viewModel.active!.keywords).joined(separator: ", "))
+                    .padding(.all, 10)
             }
         }
         .background(Rectangle().fill(Color(NSColor.windowBackgroundColor)))
@@ -52,7 +78,7 @@ typealias IndexedRow = (Int, [Emoji])
 
 class ViewModel: ObservableObject {
     
-    static let emojisPerRow = 11
+    static let emojisPerRow = 9
     
     private var cellCount: Int = 0
     @Published private(set) var rows: [IndexedRow] = []
